@@ -1,4 +1,4 @@
-###  Hold'em engine implementation in Kotlin.
+###  Hold'em engine implementation in Kotlin. [![Build Status](https://travis-ci.org/bonkersbeavers/shell-poker.svg?branch=master)](https://travis-ci.com/bonkersbeavers/poker-engine.svg?branch=master)
 
 #### Currently engine's functionality is limited to running simple interactive console game
 
