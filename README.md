@@ -2,14 +2,14 @@
 
 #### Currently engine's functionality is limited to running simple interactive console game
 
-Build fat jar with:
+Install dependencies:
 ```
-mvn package [-DskipTests]
+mvn clean install
 ```
 
-Run interactive main:
+Run engine grpc service:
 ```
-java -jar ./target/FAT_JAR_NAME
+mvn exec:java
 ```
 
 To run tests:

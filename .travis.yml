@@ -1,5 +1,7 @@
 language: java
 sudo: false
 script:
-- mvn compile
-- mvn clean verify
+  - mvn clean
+  - mvn compile
+  - mvn test
+  - mvn antrun:run@ktlint
