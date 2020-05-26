@@ -6,29 +6,33 @@ import core.handflow.hand.HandState
 import service.local.LocalConsoleAdapter
 import core.handflow.player.Player
 
-//fun main() {
-//
-//    val adapter = LocalConsoleAdapter()
-//
-//    val settings = RoomSettings(4)
-//    val blinds = Blinds(50, 100)
-//    val positions = Positions(0, 1, 2)
-//    val players = (0 until 3).map { Player(seat = it, stack = 1000) }
-//
-//    val manager = LocalHandManager(settings, adapter)
-//    var state = HandState(players, positions, blinds)
-//
-//    while (true) {
-//        state = manager.playHand(state)
-//    }
-//}
-
 
 import io.grpc.ServerBuilder
 import service.grpc.SimpleHandManagementServiceImpl
 
 fun main(args: Array<String>) {
-    grpcServer()
+    val arg = args.getOrNull(0)
+    when (arg) {
+        "local-game" -> localGame()
+        else -> grpcServer()
+    }
+}
+
+fun localGame() {
+
+    val adapter = LocalConsoleAdapter()
+
+    val settings = RoomSettings(4)
+    val blinds = Blinds(50, 100)
+    val positions = Positions(0, 1, 2)
+    val players = (0 until 3).map { Player(seat = it, stack = 1000) }
+
+    val manager = LocalHandManager(settings, adapter)
+    var state = HandState(players, positions, blinds)
+
+    while (true) {
+        state = manager.playHand(state)
+    }
 }
 
 fun grpcServer() {

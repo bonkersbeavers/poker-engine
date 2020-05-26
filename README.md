@@ -23,9 +23,9 @@ build docker image:
 docker build -t poker-engine .
 ```
 
-run main class:
+run main class (add "local-game" argument to play simple console 3-players game):
 ```
-docker run -it --rm poker-engine mvn exec:java
+docker run -it --rm poker-engine mvn exec:java [-Dexec.args="local-game"]
 ```
 
 ### Testing:
