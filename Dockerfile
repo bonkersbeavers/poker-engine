@@ -1,11 +1,8 @@
 FROM maven
 
-COPY ./server/pom.xml /home/poker-engine/
-COPY ./server/src /home/poker-engine/src
+COPY ./pom.xml /home/engine/
+COPY ./src/ /home/engine/src
 
-WORKDIR /home/poker-engine/
+WORKDIR /home/engine/
 
-RUN mvn package -DskipTests
-
-
-EXPOSE 5050
+RUN mvn install
