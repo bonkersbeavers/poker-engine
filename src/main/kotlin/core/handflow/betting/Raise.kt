@@ -38,7 +38,8 @@ data class Raise(override val seat: Int, val chips: Int): BettingAction(seat) {
 
         val playerIsAllowedToRaise = (player.currentBet < handState.lastLegalBet) or (player.currentActionType == BettingActionType.POST)
         val playerHasEnoughChips = player.maxBet >= chips
-        val raiseIsBigEnough = chips >= handState.minRaise
+        val raiseIsHigherThanCurrentBet = chips > handState.totalBet
+        val raiseIsHigherOrEqualToMinRaise = chips >= handState.minRaise
         val betHasBeenMade = handState.lastLegalBet > 0
         val raiseIsPlayersAllIn = chips == player.maxBet
 
@@ -52,7 +53,10 @@ data class Raise(override val seat: Int, val chips: Int): BettingAction(seat) {
             betHasBeenMade.not() ->
                 InvalidAction("cannot raise if no bet has been made")
 
-            raiseIsBigEnough.not() and raiseIsPlayersAllIn.not() ->
+            raiseIsHigherThanCurrentBet.not() ->
+                InvalidAction("raise of $chips is not higher than current bet ${handState.totalBet}")
+
+            raiseIsHigherOrEqualToMinRaise.not() and raiseIsPlayersAllIn.not() ->
                 InvalidAction("raise of size $chips is smaller than minimum legal raise ${handState.minRaise}")
 
             else -> ValidAction
