@@ -38,7 +38,7 @@ fun localGame() {
 fun grpcServer() {
     val chatService = SimpleHandManagementServiceImpl()
     val server = ServerBuilder
-            .forPort(5050)
+            .forPort(5004)
             .addService(chatService)
             .build()
 
