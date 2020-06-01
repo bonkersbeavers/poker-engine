@@ -6,5 +6,3 @@ COPY ./src/ /home/engine/src
 WORKDIR /home/engine/
 
 RUN mvn install
-
-EXPOSE 5004

@@ -1,15 +1,16 @@
-import core.settings.RoomSettings
 import core.handflow.blinds.Blinds
-import core.handflow.positions.Positions
-import service.local.LocalHandManager
 import core.handflow.hand.HandState
-import service.local.LocalConsoleAdapter
 import core.handflow.player.Player
-
-
-import io.grpc.ServerBuilder
+import core.handflow.positions.Positions
+import core.settings.RoomSettings
+import io.grpc.netty.NettyServerBuilder
+import mu.KotlinLogging
 import service.grpc.SimpleHandManagementServiceImpl
+import service.local.LocalConsoleAdapter
+import service.local.LocalHandManager
+import java.net.InetSocketAddress
 
+private val logger = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     val arg = args.getOrNull(0)
     when (arg) {
@@ -36,22 +37,22 @@ fun localGame() {
 }
 
 fun grpcServer() {
-    val chatService = SimpleHandManagementServiceImpl()
-    val server = ServerBuilder
-            .forPort(5004)
-            .addService(chatService)
+    val handManagementService = SimpleHandManagementServiceImpl()
+    val server = NettyServerBuilder
+            .forAddress(InetSocketAddress("0.0.0.0", 8080))
+            .addService(handManagementService)
             .build()
 
     Runtime.getRuntime().addShutdownHook(Thread {
-        println("Ups, JVM shutdown")
+        logger.warn { "JVM shutdown" }
 
         server.shutdown()
         server.awaitTermination()
 
-        println("Chat service stopped")
+        logger.warn( "gRPC server terminated")
     })
 
     server.start()
-    println("Chat service started")
+    logger.info { "gRPC server started" }
     server.awaitTermination()
 }
