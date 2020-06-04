@@ -1,8 +1,14 @@
-FROM maven
+FROM maven:poker-engine-ecosystem
+WORKDIR /app
 
-COPY ./pom.xml /home/engine/
-COPY ./src/ /home/engine/src
-
-WORKDIR /home/engine/
+COPY ./src ./src
 
 RUN mvn install
+
+# FROM maven
+# WORKDIR /app
+
+# COPY ./pom.xml .
+# COPY ./src ./src
+
+# RUN mvn install

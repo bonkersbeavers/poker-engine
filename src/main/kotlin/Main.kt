@@ -2,7 +2,7 @@ import core.handflow.blinds.Blinds
 import core.handflow.hand.HandState
 import core.handflow.player.Player
 import core.handflow.positions.Positions
-import core.settings.RoomSettings
+import core.table.CashGameTableSettings
 import io.grpc.netty.NettyServerBuilder
 import mu.KotlinLogging
 import service.grpc.SimpleHandManagementServiceImpl
@@ -23,7 +23,7 @@ fun localGame() {
 
     val adapter = LocalConsoleAdapter()
 
-    val settings = RoomSettings(4)
+    val settings = CashGameTableSettings(4)
     val blinds = Blinds(50, 100)
     val positions = Positions(0, 1, 2)
     val players = (0 until 3).map { Player(seat = it, stack = 1000) }

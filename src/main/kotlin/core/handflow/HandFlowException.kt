@@ -1,3 +1,3 @@
 package core.handflow
 
-class HandFlowException(message: String): Exception(message)
+class HandFlowException(override val message: String): Exception(message)

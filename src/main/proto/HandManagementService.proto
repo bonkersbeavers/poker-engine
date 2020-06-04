@@ -5,14 +5,92 @@ package service.grpc;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
+
+
 option java_multiple_files = true;
 option java_package = "service.grpc";
 
 
 service SimpleHandManagementService {
-  rpc Hello (SimpleMessage) returns (SimpleMessage);
+
+  // serves debug purposes
+  rpc Echo (SimpleMessage) returns (SimpleMessage);
+
+  rpc GetTable(google.protobuf.Empty) returns (Table);
+}
+
+message TableSettings {
+  int32 seatsNumber = 1;
+  int32 actionTimeout = 2;
+  Blinds blinds = 3;
 }
 
 message SimpleMessage {
   string contents = 1;
+}
+
+message Table {
+  int32 seatsNumber = 1;
+  repeated Player players = 2;
+  Positions positions = 3;
+  Blinds blinds = 4;
+  repeated Card communityCards = 5;
+  repeated int32 pots = 6;
+  int32 activePlayer = 7;
+}
+
+message Blinds {
+  int32 smallBlind = 1;
+  int32 bigBlind = 2;
+  int32 ante = 3;
+}
+
+message Positions {
+  int32 button = 1;
+  int32 smallBlind = 2;
+  int32 bigBlind = 3;
+}
+
+message Player {
+  int32 seat = 1;
+  int32 stack = 2;
+  int32 bet = 3;
+  BettingAction lastAction = 4;
+  repeated Card holeCards = 5;
+}
+
+enum BettingAction {
+  NONE = 0;
+  POST = 1;
+  FOLD = 2;
+  CHECK = 3;
+  CALL = 4;
+  BET = 5;
+  RAISE = 6;
+}
+
+message Card {
+  enum Rank {
+    NO_RANK = 0;
+    ACE = 1;
+    TWO = 2;
+    THREE = 3;
+    FOUR = 4;
+    FIVE = 5;
+    SIX = 6;
+    SEVEN = 7;
+    EIGHT = 8;
+    NINE = 9;
+    TEN = 10;
+    JACK = 11;
+    QUEEN = 12;
+    KING = 13;
+  }
+  enum Suit {
+    NO_SUIT = 0;
+    SPADES = 1;
+    HEARTS = 2;
+    DIAMONDS = 3;
+    CLUBS = 4;
+  }
 }

@@ -1,6 +1,6 @@
 package service.local
 
-import core.settings.RoomSettings
+import core.table.CashGameTableSettings
 import core.handflow.blinds.getBlindsPostActionsSequence
 import core.handflow.pot.getPotActionsSequence
 import core.handflow.dealer.Dealer
@@ -13,7 +13,7 @@ import core.handflow.helpers.InitializeHand
 import core.handflow.positions.ShiftPositions
 import core.handflow.showdown.getShowdownActionsSequence
 
-class LocalHandManager(val settings: RoomSettings, val playerAdapter: LocalConsoleAdapter) {
+class LocalHandManager(val settings: CashGameTableSettings, val playerAdapter: LocalConsoleAdapter) {
 
     private var handNumber: Int = 0
 
@@ -34,7 +34,7 @@ class LocalHandManager(val settings: RoomSettings, val playerAdapter: LocalConso
         // TODO() collect ante
 
         // post blinds
-        val blindsPostActions = getBlindsPostActionsSequence(currentState(), emptyList())
+        val blindsPostActions = getBlindsPostActionsSequence(currentState())
         handRecord.registerSequence(blindsPostActions)
 
         // players interaction

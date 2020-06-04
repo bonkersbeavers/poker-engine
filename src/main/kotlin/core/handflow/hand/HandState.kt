@@ -40,7 +40,7 @@ data class HandState(
             (it.currentActionType == BettingActionType.BET || it.currentActionType == BettingActionType.RAISE) }
 
     val activePlayer: Player? = run {
-        if (players.inGame().count() < 2) {
+        if ((handStage != HandStage.INTERACTIVE_STAGE) or (players.inGame().count() < 2)) {
             null
         } else {
             val startingSeat = when {
