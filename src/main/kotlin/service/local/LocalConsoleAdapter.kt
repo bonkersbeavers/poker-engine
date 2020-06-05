@@ -81,7 +81,7 @@ class LocalConsoleAdapter() {
         }
     }
 
-    fun requestBettingAction(playerSeat: Int): BettingAction {
+    fun requestBettingAction(playerSeat: Int): InteractiveBettingAction {
 
         while (true) {
             print("your action > ")
@@ -98,7 +98,7 @@ class LocalConsoleAdapter() {
         }
     }
 
-    private fun parseAction(command: String, playerSeat: Int): BettingAction {
+    private fun parseAction(command: String, playerSeat: Int): InteractiveBettingAction {
         val words = command.toUpperCase().split(" ")
         val actionString = words[0]
 

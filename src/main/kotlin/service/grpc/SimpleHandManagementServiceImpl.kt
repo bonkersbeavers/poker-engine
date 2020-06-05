@@ -10,7 +10,7 @@ private val logger = KotlinLogging.logger {}
 class SimpleHandManagementServiceImpl: SimpleHandManagementServiceImplBase(
         coroutineContext = newFixedThreadPool(1).asCoroutineDispatcher()
 ) {
-    override suspend fun echo(request: SimpleMessage): SimpleMessageOrError {
+    override suspend fun echo(request: SimpleMessage): SimpleMessage {
         try {
             logger.debug { "echo rpc called with contents '${request.contents}'" }
             throw HandFlowException("testing hand flow exception throwing")

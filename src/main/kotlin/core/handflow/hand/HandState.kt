@@ -21,7 +21,8 @@ data class HandState(
         val lastLegalBet: Int = 0,
         val extraBet: Int = 0,
         val minRaise: Int = 0,
-        val handStage: HandStage? = null
+        val handStage: HandStage? = null,
+        val newPlayersSeats: Collection<Int> = emptySet()
 ) {
     val bettingRound: BettingRound? = run {
         val holeCardsDealt = players.all { it.cards != null }

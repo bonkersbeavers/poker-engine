@@ -17,7 +17,7 @@ class HandManager(val seatsNumber: Int) {
     private var handRecord: HandRecord? = null
     private var dealer: Dealer? = null
 
-    fun startHand(initialState: HandState, newPlayersSeats: Collection<Int>) {
+    fun startHand(initialState: HandState) {
         handNumber += 1
         handRecord = HandRecord(initialState)
         dealer = Dealer()
@@ -25,7 +25,7 @@ class HandManager(val seatsNumber: Int) {
         handRecord!!.register(InitializeHand)
         handRecord!!.register(ShiftPositions(seatsNumber))
         // TODO() collect ante
-        handRecord!!.registerSequence(getBlindsPostActionsSequence(getCurrentState(), newPlayersSeats))
+        handRecord!!.registerSequence(getBlindsPostActionsSequence(getCurrentState()))
 
 
     }

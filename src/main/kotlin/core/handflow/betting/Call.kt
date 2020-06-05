@@ -6,7 +6,7 @@ import core.handflow.hand.InvalidAction
 import core.handflow.hand.ValidAction
 import core.handflow.player.getBySeat
 
-data class Call(override val seat: Int): BettingAction(seat) {
+data class Call(override val seat: Int): InteractiveBettingAction(seat) {
     override fun apply(handState: HandState): HandState {
         val newPlayerStates = handState.players.map {
             if (it.seat == seat) {
@@ -19,7 +19,7 @@ data class Call(override val seat: Int): BettingAction(seat) {
         return handState.copy(players = newPlayerStates)
     }
 
-    override fun validate(handState: HandState): ActionValidation {
+    override fun innerValidate(handState: HandState): ActionValidation {
         val player = handState.players.getBySeat(seat)!!
         return if (player.currentBet < handState.totalBet) {
             ValidAction

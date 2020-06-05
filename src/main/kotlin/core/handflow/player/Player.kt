@@ -13,7 +13,7 @@ data class Player(
         val currentBet: Int = 0
         ) {
 
-    val isInGame: Boolean = currentActionType != BettingActionType.FOLD
+    val isInGame: Boolean = currentActionType != BettingActionType.FOLD && cards != null
     val isAllIn: Boolean = (stack == 0) and isInGame
     val isDecisive: Boolean = isInGame and !isAllIn
     val actedInCurrentBettingRound: Boolean = (currentActionType != null) && (currentActionType != BettingActionType.POST)

@@ -41,7 +41,7 @@ class LocalHandManager(val settings: CashGameTableSettings, val playerAdapter: L
         while (currentState().handStage == HandStage.INTERACTIVE_STAGE) {
 
             // dealer action
-            handRecord.register(dealer.getNextAction(currentState()))
+            handRecord.register(dealer.autoAction(currentState()))
 
             // players actions
             while (currentState().activePlayer != null) {
@@ -71,7 +71,7 @@ class LocalHandManager(val settings: CashGameTableSettings, val playerAdapter: L
 
         // final dealer's actions
         while (currentState().handStage == HandStage.ALLIN_DUEL_STAGE) {
-            handRecord.register(dealer.getNextAction(currentState()))
+            handRecord.register(dealer.autoAction(currentState()))
         }
 
         val potDistributionSequence = getPotActionsSequence(currentState())

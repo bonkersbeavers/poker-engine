@@ -9,7 +9,7 @@ import core.handflow.HandFlowException
 class Dealer {
     private var deckIterator: ListIterator<Card> = baseDeck.shuffled().listIterator()
 
-    fun getNextAction(handState: HandState): DealerAction {
+    fun autoAction(handState: HandState): DealerAction {
         return when(handState.bettingRound) {
             null -> getDealHoleCardsAction(handState.players)
             BettingRound.PRE_FLOP -> getDealFlopAction()
