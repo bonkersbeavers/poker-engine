@@ -1,4 +1,4 @@
-package service.local
+package server.local
 
 import core.handflow.betting.*
 import core.handflow.hand.HandState
@@ -7,7 +7,7 @@ import core.handflow.pot.PotAction
 import core.handflow.showdown.ShowCards
 import core.handflow.showdown.ShowdownAction
 
-class LocalConsoleAdapter() {
+class LocalConsoleAdapter {
 
     fun update(handState: HandState) {
 

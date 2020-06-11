@@ -7,7 +7,11 @@ import core.handflow.player.Player
 import core.handflow.HandFlowException
 
 class Dealer {
-    private var deckIterator: ListIterator<Card> = baseDeck.shuffled().listIterator()
+    private lateinit var deckIterator: ListIterator<Card>
+
+    fun shuffle() {
+        deckIterator = baseDeck.shuffled().listIterator()
+    }
 
     fun autoAction(handState: HandState): DealerAction {
         return when(handState.bettingRound) {

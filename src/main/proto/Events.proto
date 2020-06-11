@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+//package proto.events;
+//
+//import "google/protobuf/timestamp.proto";
+//import "google/protobuf/empty.proto";
+//import "../proto/Cards.proto";
+//
+//option java_multiple_files = true;
+//option java_package = "proto.events";
+//
+//message HandEvent {
+//  string name = 1; // todo: create proper events
+//}
+//
+//message DealerEvent {
+//  string street = 1;
+//  repeated proto.cards.Card cards = 2;
+//}
+//
+//
+////
+////message PlayerActionEvent {
+////  string playerName = 1;
+////  BettingAction action = 2;
+////
+////}
+//

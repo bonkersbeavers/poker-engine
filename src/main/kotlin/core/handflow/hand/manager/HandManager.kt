@@ -1,60 +1,172 @@
 package core.handflow.hand.manager
 
 import core.handflow.HandFlowException
+import core.handflow.betting.InteractiveBettingAction
 import core.handflow.blinds.getBlindsPostActionsSequence
 import core.handflow.dealer.Dealer
-import core.handflow.hand.HandAction
-import core.handflow.hand.HandRecord
-import core.handflow.hand.HandStage
-import core.handflow.hand.HandState
+import core.handflow.hand.*
+import core.handflow.helpers.CollectBets
 import core.handflow.helpers.InitializeHand
+import core.handflow.player.management.PlayerManagementAction
 import core.handflow.positions.ShiftPositions
+import core.handflow.positions.withRandomPositions
+import core.handflow.pot.getPotActionsSequence
+import core.handflow.showdown.getShowdownActionsSequence
 
-class HandManager(val seatsNumber: Int) {
-    var handNumber: Int = 0
-        private set
+private enum class HandPhase {
+    INIT,
+    DEALER,
+    BETTING_ROUND,
+    BETTING_ROUND_CLEANUP,
+    SHOWDOWN,
+    ALL_IN_DUEL,
+    POT_DISTRIBUTION,
+    FINISHED
+}
 
-    private var handRecord: HandRecord? = null
-    private var dealer: Dealer? = null
+enum class ActionType {
+    PLAYER_ACTION,
+    DEALER_ACTION,
+    NEW_HAND_ACTION
+}
 
-    fun startHand(initialState: HandState) {
-        handNumber += 1
-        handRecord = HandRecord(initialState)
-        dealer = Dealer()
+class HandManager(initState: HandState, val seatsNumber: Int) {
+    private val dealer = Dealer()
 
-        handRecord!!.register(InitializeHand)
-        handRecord!!.register(ShiftPositions(seatsNumber))
-        // TODO() collect ante
-        handRecord!!.registerSequence(getBlindsPostActionsSequence(getCurrentState()))
+    private var nextHandInitState: HandState = initState
+    private lateinit var handRecord: HandRecord
+    private lateinit var currentPhase: HandPhase
 
+    fun getHandState(): HandState = handRecord.resolveHandState()
+    fun getHandHistory(): List<HandAction> = handRecord.getHandHistory()
 
+    fun getNextActionType(): ActionType {
+        return when (currentPhase) {
+            HandPhase.FINISHED -> ActionType.NEW_HAND_ACTION
+            HandPhase.BETTING_ROUND -> ActionType.PLAYER_ACTION
+            HandPhase.ALL_IN_DUEL -> ActionType.DEALER_ACTION
+            else -> throw HandFlowException("HandManager found in illegal state with currentPhase `$currentPhase`")
+        }
     }
 
-    fun getCurrentState(): HandState {
-        if (handRecord == null) {
-            throw HandFlowException("cannot resolve hand state, hand not started yet")
+    fun newHand(randomPositions: Boolean = false) {
+        if (randomPositions) {
+            nextHandInitState = nextHandInitState.withRandomPositions(seatsNumber)
+        }
+        handRecord = HandRecord(nextHandInitState)
+        currentPhase = HandPhase.INIT
+        autoRun()
+    }
+
+    // used only in interactive stage
+    fun nextPlayerAction(action: InteractiveBettingAction): ActionValidation {
+
+        if (currentPhase != HandPhase.BETTING_ROUND)
+            throw HandFlowException("cannot apply player's action while not in betting round")
+
+        val validation = action.validate(getHandState())
+        if (validation is ValidAction) {
+            handRecord.register(action)
+            autoRun()
         }
 
-        return handRecord!!.resolveHandState()
+        return validation
     }
 
-    fun getHandHistory(): List<HandAction> {
-        if (handRecord == null) {
-            throw HandFlowException("cannot resolve hand history, hand not started yet")
+    // used only in all is duel stage
+    fun nextAction() {
+        if (currentPhase != HandPhase.ALL_IN_DUEL)
+            throw HandFlowException("cannot trigger dealer action")
+
+        handRecord.register(dealer.autoAction(getHandState()))
+        autoRun()
+    }
+
+    fun managePlayers(action: PlayerManagementAction): ActionValidation {
+        val validation = action.validate(getHandState())
+        if (validation is ValidAction) {
+            handRecord.register(action)
+            autoRun()
         }
 
-        return handRecord!!.getHandHistory()
+        return validation
     }
 
-    private fun runAuto() {
-        val handState = handRecord!!.resolveHandState()
-        if (handState.activePlayer != null)
-            return
+    private fun autoRun() {
 
-        if (handState.handStage == HandStage.ALLIN_DUEL_STAGE)
-            return
+        val updated = when (currentPhase) {
+            HandPhase.INIT -> {
+                dealer.shuffle()
+                handRecord.register(InitializeHand)
+                handRecord.register(ShiftPositions(seatsNumber))
+                // todo: collect ante
+                handRecord.registerSequence(getBlindsPostActionsSequence(getHandState()))
+                currentPhase = HandPhase.DEALER
+                true
+            }
 
+            HandPhase.DEALER -> {
+                handRecord.register(dealer.autoAction(getHandState()))
+                currentPhase = HandPhase.BETTING_ROUND
+                true
+            }
 
-        runAuto()
+            HandPhase.BETTING_ROUND -> {
+                if (getHandState().activePlayer != null)
+                    false
+                else {
+                    currentPhase = HandPhase.BETTING_ROUND_CLEANUP
+                    true
+                }
+            }
+
+            HandPhase.BETTING_ROUND_CLEANUP -> {
+                handRecord.register(CollectBets)
+                currentPhase = if (getHandState().handStage == HandStage.INTERACTIVE_STAGE) {
+                    HandPhase.DEALER
+                } else {
+                    HandPhase.SHOWDOWN
+                }
+                true
+            }
+
+            HandPhase.SHOWDOWN -> {
+                val showdownSequence = getShowdownActionsSequence(getHandState())
+                handRecord.registerSequence(showdownSequence)
+
+                currentPhase = if (getHandState().handStage == HandStage.ALLIN_DUEL_STAGE) {
+                    HandPhase.ALL_IN_DUEL
+                } else {
+                    HandPhase.POT_DISTRIBUTION
+                }
+                true
+            }
+
+            HandPhase.ALL_IN_DUEL -> {
+                if (getHandState().handStage == HandStage.RESULTS_STAGE) {
+                    currentPhase = HandPhase.POT_DISTRIBUTION
+                    true
+                } else {
+                    false
+                }
+            }
+
+            HandPhase.POT_DISTRIBUTION -> {
+                val potDistributionSequence = getPotActionsSequence(getHandState())
+                handRecord.registerSequence(potDistributionSequence)
+                currentPhase = HandPhase.FINISHED
+                true
+            }
+
+            HandPhase.FINISHED -> {
+                nextHandInitState = handRecord.resolveHandState()
+                false
+            }
+
+            else -> false
+        }
+
+        if (updated)
+            autoRun()
     }
 }

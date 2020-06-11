@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package poker.proto;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "Cards.proto";
+import "Players.proto";
+import "Betting.proto";
+
+option java_multiple_files = true;
+option java_package = "poker.proto";
+
+message Table {
+  int32 seatsNumber = 1;
+  Positions positions = 3;
+  Blinds blinds = 4;
+
+  repeated Player players = 2;
+  repeated Card communityCards = 5;
+  repeated int32 pots = 6;
+
+  int32 activePlayerSeat = 7;
+  repeated BettingActionOption actionOptions = 8;
+}
+
+message Blinds {
+  int32 smallBlind = 1;
+  int32 bigBlind = 2;
+  int32 ante = 3;
+}
+
+message Positions {
+  int32 button = 1;
+  int32 smallBlind = 2;
+  int32 bigBlind = 3;
+}

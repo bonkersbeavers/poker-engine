@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package poker.proto;
+
+option java_multiple_files = true;
+option java_package = "poker.proto";
+
+message BettingActionLog {
+  oneof log {
+    NoActionLog noAction = 1;
+    PostLog post = 2;
+    FoldLog fold = 3;
+    CheckLog check = 4;
+    CallLog call = 5;
+    BetLog bet = 6;
+    RaiseLog raise = 7;
+  }
+}
+
+message NoActionLog {}
+message PostLog {}
+message FoldLog {}
+message CheckLog {}
+message CallLog {}
+message BetLog {}
+message RaiseLog {}
+
+
+message BettingActionRequest {
+  string actionToken = 1;
+
+  oneof request {
+    FoldRequest fold = 2;
+    CheckRequest check = 3;
+    CallRequest call = 4;
+    BetRequest bet = 5;
+    RaiseRequest raise = 6;
+  }
+}
+
+message FoldRequest {}
+message CheckRequest {}
+message CallRequest {}
+message BetRequest { int32 chips = 2; }
+message RaiseRequest { int32 chips = 2; }
+
+
+message BettingActionOption {
+  oneof option {
+    FoldOption foldOption = 1;
+    CheckOption checkOption = 2;
+    CallOption callOption = 3;
+    BetOption betOption = 4;
+    RaiseOption raiseOption = 5;
+  }
+}
+
+message FoldOption {}
+message CheckOption {}
+message CallOption {}
+message BetOption { int32 minBet = 1; }
+message RaiseOption { int32 minRaise = 1; }

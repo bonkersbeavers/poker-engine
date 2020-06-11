@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package poker.proto;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "Players.proto";
+import "Betting.proto";
+import "HandState.proto";
+
+option java_multiple_files = true;
+option java_package = "poker.proto";
+
+service CashGameTableService {
+  rpc create(TableSettings) returns (RequestStatus);
+  rpc subscribe(google.protobuf.Empty) returns (stream TableUpdate);
+  rpc start(google.protobuf.Empty) returns (RequestStatus);
+  rpc stop(google.protobuf.Empty) returns (RequestStatus);
+  rpc addPlayer(PlayerJoinRequest) returns (RequestStatus);
+  rpc removePlayer(PlayerRemoveRequest) returns (RequestStatus);
+  rpc takeAction(BettingActionRequest) returns (RequestStatus);
+}
+
+message RequestStatus {
+  StatusCode code = 1;
+  string message = 2;
+}
+
+enum StatusCode {
+  OK = 0;
+  FAILED = 1;
+}
+
+message TableUpdate {
+  Table table = 1;
+//  repeated HandEvent handHistory = 2;
+}
+
+message TableSettings {
+  string jsonSettings = 1;
+}
+
+message SimpleMessage {
+  string contents = 1;
+}
+

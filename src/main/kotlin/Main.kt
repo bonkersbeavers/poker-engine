@@ -1,14 +1,6 @@
-import core.handflow.blinds.Blinds
-import core.handflow.hand.HandState
-import core.handflow.player.Player
-import core.handflow.positions.Positions
-import core.table.CashGameTableSettings
 import io.grpc.netty.NettyServerBuilder
 import mu.KotlinLogging
-import service.grpc.SimpleHandManagementServiceImpl
-import service.local.LocalConsoleAdapter
-import service.local.LocalGameController
-import service.local.LocalHandManager
+import server.grpc.CashGameTableServiceImpl
 import java.net.InetSocketAddress
 
 private val logger = KotlinLogging.logger {}
@@ -23,18 +15,18 @@ fun main(args: Array<String>) {
 
 fun localGame() {
 
-    val adapter = LocalConsoleAdapter()
-
-    val blinds = Blinds(5, 10)
-    val positions = Positions(0, 1, 2)
-
-    val controller = LocalGameController(3, adapter)
-    val players = (0 until 3).map { Player(seat = it, stack = 1000) }
-    var state = HandState(players, positions, blinds)
-
-    while (true) {
-        state = controller.playHand(state)
-    }
+//    val adapter = LocalConsoleAdapter()
+//
+//    val blinds = Blinds(5, 10)
+//    val positions = Positions(0, 1, 2)
+//
+//    val controller = LocalGameController(3, adapter)
+//    val players = (0 until 3).map { Player(seat = it, stack = 1000) }
+//    var state = HandState(players, positions, blinds)
+//
+//    while (true) {
+//        state = controller.playHand(state)
+//    }
 
 
 //    val settings = CashGameTableSettings(4, blinds = blinds)
@@ -50,7 +42,7 @@ fun localGame() {
 }
 
 fun grpcServer() {
-    val handManagementService = SimpleHandManagementServiceImpl()
+    val handManagementService = CashGameTableServiceImpl()
     val server = NettyServerBuilder
             .forAddress(InetSocketAddress("0.0.0.0", 8080))
             .addService(handManagementService)
