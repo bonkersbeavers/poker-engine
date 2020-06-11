@@ -14,7 +14,6 @@ data class ShiftPositions(val seatsNumber: Int): HandAction(), ApplicableHandAct
     override fun apply(handState: HandState): HandState {
         val players = handState.players
         val currentPositions = handState.positions
-        val maxSeatNumber = seatsNumber - 1
 
         // Big blind always moves to the next player.
         val newBigBlindSeat = players.next(currentPositions.bigBlind).seat

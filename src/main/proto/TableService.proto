@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "Players.proto";
 import "Betting.proto";
-import "HandState.proto";
+import "Table.proto";
 
 option java_multiple_files = true;
 option java_package = "poker.proto";

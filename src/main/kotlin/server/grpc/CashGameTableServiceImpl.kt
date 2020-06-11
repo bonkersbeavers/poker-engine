@@ -169,7 +169,7 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
         val state = handManager!!.getHandState()
         val history = handManager!!.getHandHistory()
-        val update = TableUpdateUtils.tableUpdate(state, history)
+        val update = TableUpdateUtils.tableUpdate(state, history, settings!!.seatsNumber)
 
         channel.send(update)
     }

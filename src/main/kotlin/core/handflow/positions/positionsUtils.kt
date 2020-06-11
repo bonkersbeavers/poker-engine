@@ -3,7 +3,7 @@ package core.handflow.positions
 import core.handflow.hand.HandState
 import core.handflow.player.next
 
-fun HandState.withRandomPositions(seatsNumber: Int): HandState {
+fun HandState.withRandomPositions(): HandState {
     val takenSeats = players.map { it.seat }
     val button = takenSeats.shuffled().first()
 

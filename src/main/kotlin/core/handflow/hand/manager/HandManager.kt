@@ -51,7 +51,7 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
 
     fun newHand(randomPositions: Boolean = false) {
         if (randomPositions) {
-            nextHandInitState = nextHandInitState.withRandomPositions(seatsNumber)
+            nextHandInitState = nextHandInitState.withRandomPositions()
         }
         handRecord = HandRecord(nextHandInitState)
         currentPhase = HandPhase.INIT
@@ -162,8 +162,6 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
                 nextHandInitState = handRecord.resolveHandState()
                 false
             }
-
-            else -> false
         }
 
         if (updated)
