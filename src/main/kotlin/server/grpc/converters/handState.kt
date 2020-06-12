@@ -1,5 +1,6 @@
 package server.grpc.converters
 
+import core.handflow.betting.option.resolveBettingOptions
 import core.handflow.hand.HandState
 import poker.proto.Table
 
@@ -25,7 +26,9 @@ fun HandState.toProtoTable(seatsNumber: Int): Table {
     tableBuilder = tableBuilder
             .setActivePlayerSeat(activePlayerSeat)
 
-    // todo: actionOptions
+    this.resolveBettingOptions().forEachIndexed { index, bettingActionOption ->
+        tableBuilder = tableBuilder.setActionOptions(index, bettingActionOption.toProtoBettingActionOption())
+    }
 
     return tableBuilder.build()
 }

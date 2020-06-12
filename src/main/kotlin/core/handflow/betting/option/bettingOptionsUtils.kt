@@ -11,7 +11,6 @@ fun HandState.resolveBettingOptions(): List<BettingActionOption> {
 
     val optionsList = mutableListOf<BettingActionOption>()
     val activeSeat = activePlayer.seat
-    optionsList.add(FoldOption)
 
     if (Fold(activeSeat).validate(this) is ValidAction)
         optionsList.add(FoldOption)
