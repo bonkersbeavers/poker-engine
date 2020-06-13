@@ -12,6 +12,18 @@ fun Card.toProtoCard(): poker.proto.Card {
             .build()
 }
 
+fun Card.toProtoHoleCard(reveal: Boolean): poker.proto.HoleCard {
+    return if (reveal) {
+        poker.proto.HoleCard.newBuilder()
+                .setRevealedCard(this.toProtoCard())
+                .build()
+    }
+    else
+        poker.proto.HoleCard.newBuilder()
+                .setHiddenCard(poker.proto.HiddenCard.getDefaultInstance())
+                .build()
+}
+
 private fun CardRank.toProtoRank(): poker.proto.Rank {
     return when (this) {
         CardRank.ACE -> poker.proto.Rank.ACE

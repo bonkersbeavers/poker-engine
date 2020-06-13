@@ -7,11 +7,11 @@ import core.handflow.player.getBySeat
 import core.handflow.player.next
 import core.handflow.player.prev
 
-data class ShiftPositions(val seatsNumber: Int): HandAction(), ApplicableHandAction {
-
-    private fun previousPosition(from: Int): Int = if (from > 0) (from - 1) else (seatsNumber - 1)
+object ShiftPositions: HandAction(), ApplicableHandAction {
 
     override fun apply(handState: HandState): HandState {
+        fun previousPosition(from: Int): Int = if (from > 0) (from - 1) else (handState.seatsNumber - 1)
+
         val players = handState.players
         val currentPositions = handState.positions
 

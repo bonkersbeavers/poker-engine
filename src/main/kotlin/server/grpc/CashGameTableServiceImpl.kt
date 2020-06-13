@@ -6,20 +6,17 @@ import core.handflow.hand.InvalidAction
 import core.handflow.hand.manager.ActionType
 import core.handflow.hand.manager.HandManager
 import core.handflow.positions.Positions
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import mu.KotlinLogging
 import poker.proto.*
+import server.grpc.connection.PlayersManager
 import server.grpc.converters.toAddPlayer
 import server.grpc.converters.toCashGameTableSettings
 import server.grpc.converters.toInteractiveBettingAction
 import server.grpc.converters.toRemovePlayer
 import server.grpc.utils.RequestStatusUtils
-import server.grpc.utils.TableUpdateUtils
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -35,11 +32,13 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
     private var state: ServiceState = ServiceState.CLEAR
     private var handManager: HandManager? = null
     private var settings: CashGameTableSettings? = null
-    private val updateChannel: BroadcastChannel<TableUpdate> = ConflatedBroadcastChannel()
+    private val playersManager: PlayersManager = PlayersManager()
     private var actionToken: String? = null
 
     override suspend fun create(request: TableSettings): RequestStatus {
         logger.debug("received create request: ${request.jsonSettings}")
+
+        Channel.CONFLATED
 
         if (state != ServiceState.CLEAR) {
             logger.debug("table already created")
@@ -48,11 +47,12 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
         settings = request.toCashGameTableSettings()
         val emptyState = HandState(
+                seatsNumber = settings!!.seatsNumber,
                 players = emptyList(),
                 blinds = settings!!.blinds,
                 positions = Positions(-1, -1, -1)
         )
-        handManager = HandManager(emptyState, settings!!.seatsNumber)
+        handManager = HandManager(emptyState)
         update()
 
         state = ServiceState.INITIALIZED
@@ -96,18 +96,21 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
         return RequestStatusUtils.ok()
     }
 
-    override fun subscribe(request: Empty): ReceiveChannel<TableUpdate> {
+    override fun subscribe(request: SubscriptionRequest): ReceiveChannel<GameUpdate> {
         logger.debug("received subscription request")
-        val subscriberChannel = updateChannel.openSubscription()
+        val subscriberChannel = playersManager.addSubscription(request.playerToken)
         logger.debug("added new subscriber")
         return subscriberChannel
     }
 
-    override suspend fun addPlayer(request: PlayerJoinRequest): RequestStatus {
+    override suspend fun addPlayer(request: PlayerJoinRequest): AddPlayerRequestStatus {
         logger.debug("received add player request: $request")
+        // todo: check if seat number is valid
         if (state == ServiceState.CLEAR) {
             logger.debug("cannot add player before the game is created")
-            return RequestStatusUtils.failed("cannot add player before the game is created")
+            return AddPlayerRequestStatus.newBuilder()
+                    .setStatus(RequestStatusUtils.failed("cannot add player before the game is created"))
+                    .build()
         }
 
         val shouldJoinAsNewPlayer = state == ServiceState.RUNNING
@@ -118,13 +121,21 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
         if (validation is InvalidAction) {
             logger.debug("invalid add player request: ${validation.reason}")
-            return RequestStatusUtils.failed("invalid add player request: ${validation.reason}")
+            return AddPlayerRequestStatus.newBuilder()
+                    .setStatus(RequestStatusUtils.failed("invalid add player request: ${validation.reason}"))
+                    .build()
         }
 
+        val playerToken = UUID.randomUUID().toString()
+
         handManager!!.managePlayers(action)
+        playersManager.registerPlayer(request.seat, playerToken)
         logger.debug("successfully added player: $action")
         update()
-        return RequestStatusUtils.ok()
+        return AddPlayerRequestStatus.newBuilder()
+                .setStatus(RequestStatusUtils.ok())
+                .setPlayerToken(playerToken)
+                .build()
     }
 
     override suspend fun removePlayer(request: PlayerRemoveRequest): RequestStatus {
@@ -174,7 +185,7 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
     // todo: token should not be changed if action didn't proceed
     private suspend fun update() {
-        logger.debug("sending table update to update channel with subscribers count: $updateChannel.")
+        logger.debug("broadcasting updates")
 
         actionToken = if (handManager!!.getNextActionType() == ActionType.PLAYER_ACTION)
             UUID.randomUUID().toString()
@@ -183,8 +194,8 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
         val state = handManager!!.getHandState()
         val history = handManager!!.getHandHistory()
-        val update = TableUpdateUtils.tableUpdate(state, history, settings!!.seatsNumber, actionToken)
 
-        updateChannel.send(update)
+        playersManager.update(state, history, actionToken)
+        logger.debug("updates sent")
     }
 }

@@ -13,6 +13,7 @@ import core.handflow.pot.Pot
 import core.handflow.pot.resolvePots
 
 data class HandState(
+        val seatsNumber: Int,
         val players: List<Player>,
         val positions: Positions,
         val blinds: Blinds,

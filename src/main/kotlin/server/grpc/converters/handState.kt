@@ -1,35 +1,20 @@
 package server.grpc.converters
 
-import core.handflow.betting.option.resolveBettingOptions
 import core.handflow.hand.HandState
-import poker.proto.AvailableAction
-import poker.proto.NextActionData
-import poker.proto.NoAction
 import poker.proto.Table
 
-fun HandState.toProtoTable(seatsNumber: Int, actionToken: String?): Table {
-
-    val nextActionData = when (actionToken) {
-        null -> NextActionData.newBuilder()
-                .setNoAction(NoAction.getDefaultInstance())
-                .build()
-
-        else -> NextActionData.newBuilder()
-                .setAvailableAction(AvailableAction.newBuilder()
-                        .setActivePlayerSeat(this.activePlayer!!.seat)
-                        .setActionToken(actionToken)
-                        .addAllActionOptions(this.resolveBettingOptions().map { it.toProtoBettingActionOption()} )
-                        .build()
-                ).build()
-    }
+fun HandState.toProtoTable(revealSeats: Collection<Int>): Table {
 
     return Table.newBuilder()
-            .setSeatsNumber(seatsNumber)
+            .setSeatsNumber(this.seatsNumber)
             .setPositions(this.positions.toProtoPositions())
             .setBlinds(this.blinds.toProtoBlinds())
-            .addAllPlayers(this.players.map { it.toProtoPlayer() })
+            .addAllPlayers(this.players.map {
+                val shouldRevealCards = it.seat in revealSeats
+                it.toProtoPlayer(revealCards = shouldRevealCards)
+            })
             .addAllCommunityCards(this.communityCards.map { it.toProtoCard() })
             .addAllPots(this.pots.map { it.size })
-            .setNextAction(nextActionData)
+            .setActivePlayerSeat(this.activePlayer?.seat ?: -1)
             .build()
 }

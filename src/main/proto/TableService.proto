@@ -13,12 +13,21 @@ option java_package = "poker.proto";
 
 service CashGameTableService {
   rpc create(TableSettings) returns (RequestStatus);
-  rpc subscribe(google.protobuf.Empty) returns (stream TableUpdate);
+  rpc subscribe(SubscriptionRequest) returns (stream GameUpdate);
   rpc start(google.protobuf.Empty) returns (RequestStatus);
   rpc stop(google.protobuf.Empty) returns (RequestStatus);
-  rpc addPlayer(PlayerJoinRequest) returns (RequestStatus);
+  rpc addPlayer(PlayerJoinRequest) returns (AddPlayerRequestStatus);
   rpc removePlayer(PlayerRemoveRequest) returns (RequestStatus);
   rpc takeAction(BettingActionRequest) returns (RequestStatus);
+}
+
+message AddPlayerRequestStatus {
+  RequestStatus status = 1;
+  string playerToken = 2;
+}
+
+message SubscriptionRequest {
+  string playerToken = 1;
 }
 
 message RequestStatus {
@@ -31,8 +40,9 @@ enum StatusCode {
   FAILED = 1;
 }
 
-message TableUpdate {
+message GameUpdate {
   Table table = 1;
+  NextActionData nextAction = 2;
 //  repeated HandEvent handHistory = 2;
 }
 
@@ -44,3 +54,16 @@ message SimpleMessage {
   string contents = 1;
 }
 
+message NextActionData {
+  oneof action {
+    NoAction noAction = 1;
+    AvailableAction availableAction = 2;
+  }
+}
+
+message NoAction {}
+
+message AvailableAction {
+  repeated BettingActionOption actionOptions = 2;
+  string actionToken = 3;
+}

@@ -11,15 +11,17 @@ option java_multiple_files = true;
 option java_package = "poker.proto";
 
 message Player {
-  int32 seat = 1;
-  int32 stack = 2;
-  int32 bet = 3;
-  BettingActionLog actionLog = 4;
-  repeated Card holeCards = 5;
+  string name = 1;
+  int32 seat = 2;
+  int32 stack = 3;
+  int32 bet = 4;
+  BettingActionLog actionLog = 5;
+  repeated HoleCard holeCards = 6;
 }
 
 message PlayerJoinRequest {
-  int32 seat = 1;
+  string name = 1;
+  int32 seat = 2;
 }
 
 message PlayerRemoveRequest {

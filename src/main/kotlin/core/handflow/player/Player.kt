@@ -6,6 +6,7 @@ import core.pokerhands.PokerHand
 import core.pokerhands.pickBestHand
 
 data class Player(
+        val name: String,
         val seat: Int,
         val stack: Int,
         val cards: Pair<Card, Card>? = null,

@@ -5,9 +5,9 @@ import core.handflow.player.Player
 import core.handflow.player.PlayerAction
 import core.handflow.player.getBySeat
 
-data class AddPlayer(override val seat: Int, val stack: Int, val isNewPlayer: Boolean): PlayerManagementAction(seat) {
+data class AddPlayer(val name: String, override val seat: Int, val stack: Int, val isNewPlayer: Boolean): PlayerManagementAction(seat) {
     override fun apply(handState: HandState): HandState {
-        val newPlayer = Player(seat = seat, stack = stack)
+        val newPlayer = Player(name = name, seat = seat, stack = stack)
 
         return if (isNewPlayer) {
             handState.copy(

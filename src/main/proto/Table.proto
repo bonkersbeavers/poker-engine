@@ -20,22 +20,7 @@ message Table {
   repeated Card communityCards = 5;
   repeated int32 pots = 6;
 
-  NextActionData nextAction = 7;
-}
-
-message NextActionData {
-  oneof action {
-    NoAction noAction = 1;
-    AvailableAction availableAction = 2;
-  }
-}
-
-message NoAction {}
-
-message AvailableAction {
-  int32 activePlayerSeat = 1;
-  repeated BettingActionOption actionOptions = 2;
-  string actionToken = 3;
+  int32 activePlayerSeat = 7;
 }
 
 message Blinds {

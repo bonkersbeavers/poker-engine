@@ -5,6 +5,15 @@ package poker.proto;
 option java_multiple_files = true;
 option java_package = "poker.proto";
 
+message HoleCard {
+  oneof card {
+    Card revealedCard = 1;
+    HiddenCard hiddenCard = 2;
+  }
+}
+
+message HiddenCard {}
+
 message Card {
   Rank rank = 1;
   Suit suit = 2;

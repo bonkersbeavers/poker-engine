@@ -6,7 +6,7 @@ import poker.proto.PlayerJoinRequest
 import poker.proto.PlayerRemoveRequest
 
 fun PlayerJoinRequest.toAddPlayer(stack: Int, isNewPlayer: Boolean): AddPlayer {
-    return AddPlayer(seat, stack, isNewPlayer)
+    return AddPlayer(name, seat, stack, isNewPlayer)
 }
 
 fun PlayerRemoveRequest.toRemovePlayer(): RemovePlayer {

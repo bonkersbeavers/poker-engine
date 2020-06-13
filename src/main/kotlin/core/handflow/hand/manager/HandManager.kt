@@ -32,7 +32,7 @@ enum class ActionType {
     NEW_HAND_ACTION
 }
 
-class HandManager(initState: HandState, val seatsNumber: Int) {
+class HandManager(initState: HandState) {
     private val dealer = Dealer()
 
     private val handRecord: HandRecord = HandRecord(initState)
@@ -105,7 +105,7 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
             HandPhase.INIT -> {
                 dealer.shuffle()
                 handRecord.register(InitializeHand)
-                handRecord.register(ShiftPositions(seatsNumber))
+                handRecord.register(ShiftPositions)
                 // todo: collect ante
                 handRecord.registerSequence(getBlindsPostActionsSequence(getHandState()))
                 currentPhase = HandPhase.DEALER

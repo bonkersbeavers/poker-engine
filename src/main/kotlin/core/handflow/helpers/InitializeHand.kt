@@ -9,7 +9,7 @@ import core.handflow.player.Player
 object InitializeHand: HandAction(), ApplicableHandAction {
     override fun apply(handState: HandState): HandState {
         val clearPlayers = handState.players.map {
-            Player(seat = it.seat, stack = it.stack, cards = null, currentActionType = null, currentBet = 0)
+            it.copy(cards = null, currentActionType = null, currentBet = 0)
         }
 
         return handState.copy(
