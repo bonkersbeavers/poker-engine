@@ -10,8 +10,7 @@ fun Player.toProtoPlayer(): poker.proto.Player {
             .setActionLog(this.currentActionType.toProtoActionLog())
 
     if (this.cards != null) {
-        builder = builder.setHoleCards(0, this.cards.first.toProtoCard())
-                .setHoleCards(1, this.cards.second.toProtoCard())
+        builder = builder.addAllHoleCards(this.cards.toList().map { it.toProtoCard() })
 
     }
 

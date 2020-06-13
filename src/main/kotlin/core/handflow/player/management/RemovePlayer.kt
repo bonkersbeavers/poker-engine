@@ -3,7 +3,7 @@ package core.handflow.player.management
 import core.handflow.hand.*
 import core.handflow.player.getBySeat
 
-class RemovePlayer(override val seat: Int): PlayerManagementAction(seat) {
+data class RemovePlayer(override val seat: Int): PlayerManagementAction(seat) {
     override fun apply(handState: HandState): HandState {
         val player = handState.players.getBySeat(seat)!!
         val potContribution = handState.seatToPotContribution.getOrDefault(seat, 0)

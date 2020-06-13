@@ -6,9 +6,9 @@ import poker.proto.TableUpdate
 import server.grpc.converters.toProtoTable
 
 object TableUpdateUtils {
-    fun tableUpdate(handState: HandState, handHistory: List<HandAction>, seatsNumber: Int): TableUpdate {
+    fun tableUpdate(handState: HandState, handHistory: List<HandAction>, seatsNumber: Int, actionToken: String?): TableUpdate {
         return TableUpdate.newBuilder()
-                .setTable(handState.toProtoTable(seatsNumber))
+                .setTable(handState.toProtoTable(seatsNumber, actionToken))
                 .build()
 
         // todo: build hand history

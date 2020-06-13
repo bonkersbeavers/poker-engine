@@ -8,12 +8,13 @@ import core.handflow.hand.*
 import core.handflow.helpers.CollectBets
 import core.handflow.helpers.InitializeHand
 import core.handflow.player.management.PlayerManagementAction
+import core.handflow.positions.DrawPositions
 import core.handflow.positions.ShiftPositions
-import core.handflow.positions.withRandomPositions
 import core.handflow.pot.getPotActionsSequence
 import core.handflow.showdown.getShowdownActionsSequence
 
 private enum class HandPhase {
+    NONE,
     INIT,
     DEALER,
     BETTING_ROUND,
@@ -25,6 +26,7 @@ private enum class HandPhase {
 }
 
 enum class ActionType {
+    NO_ACTION,
     PLAYER_ACTION,
     DEALER_ACTION,
     NEW_HAND_ACTION
@@ -33,15 +35,15 @@ enum class ActionType {
 class HandManager(initState: HandState, val seatsNumber: Int) {
     private val dealer = Dealer()
 
-    private var nextHandInitState: HandState = initState
-    private lateinit var handRecord: HandRecord
-    private lateinit var currentPhase: HandPhase
+    private val handRecord: HandRecord = HandRecord(initState)
+    private var currentPhase: HandPhase = HandPhase.NONE
 
     fun getHandState(): HandState = handRecord.resolveHandState()
     fun getHandHistory(): List<HandAction> = handRecord.getHandHistory()
 
     fun getNextActionType(): ActionType {
         return when (currentPhase) {
+            HandPhase.NONE -> ActionType.NO_ACTION
             HandPhase.FINISHED -> ActionType.NEW_HAND_ACTION
             HandPhase.BETTING_ROUND -> ActionType.PLAYER_ACTION
             HandPhase.ALL_IN_DUEL -> ActionType.DEALER_ACTION
@@ -50,10 +52,12 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
     }
 
     fun newHand(randomPositions: Boolean = false) {
+
         if (randomPositions) {
-            nextHandInitState = nextHandInitState.withRandomPositions()
+            handRecord.register(DrawPositions)
         }
-        handRecord = HandRecord(nextHandInitState)
+
+        handRecord.squash()
         currentPhase = HandPhase.INIT
         autoRun()
     }
@@ -95,6 +99,9 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
     private fun autoRun() {
 
         val updated = when (currentPhase) {
+            HandPhase.NONE ->
+                false
+
             HandPhase.INIT -> {
                 dealer.shuffle()
                 handRecord.register(InitializeHand)
@@ -159,7 +166,6 @@ class HandManager(initState: HandState, val seatsNumber: Int) {
             }
 
             HandPhase.FINISHED -> {
-                nextHandInitState = handRecord.resolveHandState()
                 false
             }
         }
