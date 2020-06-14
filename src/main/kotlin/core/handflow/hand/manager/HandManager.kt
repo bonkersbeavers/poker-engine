@@ -78,7 +78,7 @@ class HandManager(initState: HandState) {
     }
 
     // used only in all is duel stage
-    fun nextAction() {
+    fun nextDealerAction() {
         if (currentPhase != HandPhase.ALL_IN_DUEL)
             throw HandFlowException("cannot trigger dealer action")
 

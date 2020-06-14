@@ -22,6 +22,7 @@ class PlayersManager {
 
     fun addSubscription(token: String): ReceiveChannel<GameUpdate> {
         val channel = Channel<GameUpdate>(Channel.CONFLATED)
+        this.subscriptions.removeIf { subscription -> subscription.token == token }
         this.subscriptions.add(RegisteredSubscription(token, channel))
         return channel
     }
@@ -29,10 +30,27 @@ class PlayersManager {
     suspend fun update(handState: HandState, handHistory: List<HandAction>, actionToken: String?) {
         subscriptions.forEach { subscription ->
             val playerSeat = players.find { it.token == subscription.token }!!.seat
+
+            logger.debug("preparing update for seat $playerSeat")
             val update = GameUpdateUtils.gameUpdate(handState, handHistory, actionToken, playerSeat)
 
             logger.debug("sending update to player on seat $playerSeat: $update")
             subscription.channel.send(update)
+
+            logger.debug("update for seat $playerSeat sent")
         }
+    }
+
+    suspend fun updatePrivate(handState: HandState, handHistory: List<HandAction>, actionToken: String?, playerToken: String) {
+        val playerSeat = players.find { it.token == playerToken }!!.seat
+        val subscription = subscriptions.find { it.token == playerToken }!!
+
+        logger.debug("preparing update for seat $playerSeat")
+        val update = GameUpdateUtils.gameUpdate(handState, handHistory, actionToken, playerSeat)
+
+        logger.debug("sending update to player on seat $playerSeat: $update")
+        subscription.channel.send(update)
+
+        logger.debug("update for seat $playerSeat sent")
     }
 }

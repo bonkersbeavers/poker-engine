@@ -1,6 +1,7 @@
 package server.grpc
 
 import com.google.protobuf.Empty
+import core.handflow.HandFlowException
 import core.handflow.hand.HandState
 import core.handflow.hand.InvalidAction
 import core.handflow.hand.manager.ActionType
@@ -8,6 +9,8 @@ import core.handflow.hand.manager.HandManager
 import core.handflow.positions.Positions
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import mu.KotlinLogging
 import poker.proto.*
@@ -61,6 +64,41 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
         return RequestStatusUtils.ok()
     }
 
+    private suspend fun checkAndScheduleAutoPhase() {
+        logger.debug("checking if auto hand phase should be scheduled")
+        val actionType = handManager!!.getNextActionType()
+        if (actionType == ActionType.DEALER_ACTION) {
+            autoHandPhase(delayTime = settings!!.dealerActionTime.toLong())
+        }
+
+        else if (actionType == ActionType.NEW_HAND_ACTION) {
+            autoHandPhase(delayTime = settings!!.newHandTime.toLong())
+        }
+    }
+
+    private suspend fun autoHandPhase(delayTime: Long) {
+        logger.debug("starting auto hand phase coroutine")
+        delay(delayTime)
+        val actionType = handManager!!.getNextActionType()
+
+        when (actionType) {
+            ActionType.DEALER_ACTION -> {
+                handManager!!.nextDealerAction()
+            }
+
+            ActionType.NEW_HAND_ACTION -> {
+                handManager!!.newHand()
+            }
+
+            else -> throw HandFlowException("attempt to autoRun hand manager when actionType is $actionType")
+        }
+
+        logger.debug("auto hand phase run successfully")
+        update()
+
+        checkAndScheduleAutoPhase()
+    }
+
     override suspend fun start(request: Empty): RequestStatus {
         logger.debug("received start game request")
 
@@ -99,6 +137,13 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
     override fun subscribe(request: SubscriptionRequest): ReceiveChannel<GameUpdate> {
         logger.debug("received subscription request")
         val subscriberChannel = playersManager.addSubscription(request.playerToken)
+        val state = handManager!!.getHandState()
+        val history = handManager!!.getHandHistory()
+
+        launch {
+            playersManager.updatePrivate(state, history, actionToken, request.playerToken)
+        }
+
         logger.debug("added new subscriber")
         return subscriberChannel
     }
@@ -180,6 +225,7 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
         handManager!!.nextPlayerAction(action)
         logger.debug("successfully applied $action")
         update()
+        checkAndScheduleAutoPhase()
         return RequestStatusUtils.ok()
     }
 

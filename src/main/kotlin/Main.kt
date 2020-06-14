@@ -1,10 +1,14 @@
 import io.grpc.netty.NettyServerBuilder
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import server.grpc.CashGameTableServiceImpl
 import java.net.InetSocketAddress
 
 private val logger = KotlinLogging.logger {}
 fun main(args: Array<String>) {
+
     localGame()
     val arg = args.getOrNull(0)
     when (arg) {
