@@ -19,6 +19,7 @@ service CashGameTableService {
   rpc addPlayer(PlayerJoinRequest) returns (AddPlayerRequestStatus);
   rpc removePlayer(PlayerRemoveRequest) returns (RequestStatus);
   rpc takeAction(BettingActionRequest) returns (RequestStatus);
+  rpc reset(google.protobuf.Empty) returns (RequestStatus);
 }
 
 message AddPlayerRequestStatus {

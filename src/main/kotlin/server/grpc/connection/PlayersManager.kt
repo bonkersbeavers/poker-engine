@@ -1,11 +1,13 @@
 package server.grpc.connection
 
+import core.handflow.HandFlowException
 import core.handflow.hand.HandAction
 import core.handflow.hand.HandState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import mu.KotlinLogging
 import poker.proto.GameUpdate
+import server.grpc.TableServiceException
 import server.grpc.utils.GameUpdateUtils
 
 private data class RegisteredPlayer(val seat: Int, val token: String)
@@ -16,11 +18,22 @@ class PlayersManager {
     private val players: MutableList<RegisteredPlayer> = mutableListOf()
     private val subscriptions: MutableList<RegisteredSubscription> = mutableListOf()
 
+    fun clear() {
+        this.players.clear()
+        this.subscriptions.map { it.channel.close() }
+        this.subscriptions.clear()
+    }
+
     fun registerPlayer(seat: Int, token: String) {
         players.add(RegisteredPlayer(seat, token))
     }
 
     fun addSubscription(token: String): ReceiveChannel<GameUpdate> {
+        if (players.find { it.token == token } == null) {
+            logger.debug("subscription token not found")
+            throw TableServiceException("subscription token $token not found")
+        }
+
         val channel = Channel<GameUpdate>(Channel.CONFLATED)
         this.subscriptions.removeIf { subscription -> subscription.token == token }
         this.subscriptions.add(RegisteredSubscription(token, channel))

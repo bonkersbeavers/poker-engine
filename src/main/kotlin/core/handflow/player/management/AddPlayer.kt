@@ -23,6 +23,9 @@ data class AddPlayer(val name: String, override val seat: Int, val stack: Int, v
 
     override fun validate(handState: HandState): ActionValidation {
         val occupiedSeats = handState.players.map { it.seat }
+        if (seat < 0 || seat >= handState.seatsNumber)
+            return InvalidAction("seat $seat not in table's valid seats range: 0 - ${handState.seatsNumber}")
+
         if (seat in occupiedSeats)
             return InvalidAction("seat $seat is already occupied by another player")
 

@@ -7,6 +7,7 @@ import core.handflow.hand.InvalidAction
 import core.handflow.hand.manager.ActionType
 import core.handflow.hand.manager.HandManager
 import core.handflow.positions.Positions
+import io.grpc.Status
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.delay
@@ -38,6 +39,18 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
     private val playersManager: PlayersManager = PlayersManager()
     private var actionToken: String? = null
 
+    override suspend fun reset(request: Empty): RequestStatus {
+        logger.debug("reset request received")
+        this.state = ServiceState.CLEAR
+        this.handManager = null
+        this.settings = null
+        this.playersManager.clear()
+        this.actionToken = null
+
+        logger.debug("successfully cleared service's inner state")
+        return RequestStatusUtils.ok()
+    }
+
     override suspend fun create(request: TableSettings): RequestStatus {
         logger.debug("received create request: ${request.jsonSettings}")
 
@@ -48,20 +61,24 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
             return RequestStatusUtils.failed("table already created")
         }
 
-        settings = request.toCashGameTableSettings()
-        val emptyState = HandState(
-                seatsNumber = settings!!.seatsNumber,
-                players = emptyList(),
-                blinds = settings!!.blinds,
-                positions = Positions(-1, -1, -1)
-        )
-        handManager = HandManager(emptyState)
-        update()
+        try {
+            settings = request.toCashGameTableSettings()
+            val emptyState = HandState(
+                    seatsNumber = settings!!.seatsNumber,
+                    players = emptyList(),
+                    blinds = settings!!.blinds,
+                    positions = Positions(-1, -1, -1)
+            )
+            handManager = HandManager(emptyState)
+            update()
 
-        state = ServiceState.INITIALIZED
+            state = ServiceState.INITIALIZED
 
-        logger.debug("successfully created game environment")
-        return RequestStatusUtils.ok()
+            logger.debug("successfully created game environment")
+            return RequestStatusUtils.ok()
+        } catch (e: Exception) {  // todo: only json parse exceptions
+            throw Status.UNKNOWN.withDescription(e.message).asRuntimeException()
+        }
     }
 
     private suspend fun checkAndScheduleAutoPhase() {
@@ -136,21 +153,26 @@ class CashGameTableServiceImpl(override val coroutineContext: CoroutineContext =
 
     override fun subscribe(request: SubscriptionRequest): ReceiveChannel<GameUpdate> {
         logger.debug("received subscription request")
-        val subscriberChannel = playersManager.addSubscription(request.playerToken)
-        val state = handManager!!.getHandState()
-        val history = handManager!!.getHandHistory()
 
-        launch {
-            playersManager.updatePrivate(state, history, actionToken, request.playerToken)
+        return try {
+            val subscriberChannel = playersManager.addSubscription(request.playerToken)
+            val state = handManager!!.getHandState()
+            val history = handManager!!.getHandHistory()
+
+            launch {
+                playersManager.updatePrivate(state, history, actionToken, request.playerToken)
+            }
+
+            logger.debug("added new subscriber")
+            subscriberChannel
+
+        } catch (e: TableServiceException) {
+            throw Status.UNKNOWN.withDescription(e.message).asRuntimeException()
         }
-
-        logger.debug("added new subscriber")
-        return subscriberChannel
     }
 
     override suspend fun addPlayer(request: PlayerJoinRequest): AddPlayerRequestStatus {
         logger.debug("received add player request: $request")
-        // todo: check if seat number is valid
         if (state == ServiceState.CLEAR) {
             logger.debug("cannot add player before the game is created")
             return AddPlayerRequestStatus.newBuilder()
